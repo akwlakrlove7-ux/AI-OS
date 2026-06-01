@@ -137,8 +137,4 @@ ws.onopen = () => {
 2.  **Ultra-lightweight footprint**: The entire core logic (excluding node_modules/venv) fits within **~2 MB**, allowing seamless ZIP snapshot backups.
 3.  **Self-healing capabilities**: The local RAG database keeps track of state evolutionary history, enabling offline recovery without any central cloud dependency.
 
----
 
-## License
-
-This architecture specification is open for the developer ecosystem under the **MIT License**. Decouple your agent, secure your host, and retain absolute sovereignty.
