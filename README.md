@@ -16,7 +16,7 @@ By enforcing strict process boundary isolation and lightweight portable knowledg
 +-----------------------------------------------------------------------+
 |                                                                       |
 |  [ Agent Infra Layer ]                                                |
-|  +------------------+      (WSS Port 1985)     +-------------------+  |
+|  +------------------+      (WSS Port ####)     +-------------------+  |
 |  |  Cognitive Agent | <======================> |  Zero-Dep Daemon  |  |
 |  |  (Offline-First) |   2-Step Handshake Auth  |  (WinPTY Bridge)  |  |
 |  +------------------+                          +-------------------+  |
@@ -40,7 +40,7 @@ By enforcing strict process boundary isolation and lightweight portable knowledg
 
 ### Pillar 1. Zero-Dependency PTY Bridge (Crash Immunity)
 Traditional agents execute shell commands via tightly-coupled backend subprocesses. If the backend server encounters a database deadlock or memory overflow, the terminal bridge crashes, severing the developer's control.
-*   **Decoupled Host Daemon**: A standalone PTY bridge daemon (`run_terminal_daemon.py`) runs independently on the host environment (e.g., port 1985).
+*   **Decoupled Host Daemon**: A standalone PTY bridge daemon (`run_terminal_daemon.py`) runs independently on the host environment (e.g., port ####).
 *   **Zero Imports**: The daemon strictly imports zero business-logic dependencies, zero database models, and zero framework libraries.
 *   **Thread-Safe Cleanup**: Active subprocess termination and WinPTY pipes cleanup are handled asynchronously outside the main event loop, preventing asyncio blockade during terminal termination.
 *   **2-Step Handshake**: Avoids exposed token query parameters by utilizing WebSocket immediate frame-one payload validation (`{ "type": "auth", "token": "..." }`).
@@ -112,7 +112,7 @@ sequenceDiagram
 Execute the PTY daemon directly on the host system to bypass container sandbox limitations.
 ```bash
 # zero-dependency daemon execution
-python backend/run_terminal_daemon.py --port 1985 --host 127.0.0.1
+python backend/run_terminal_daemon.py --port ${AGENT_DAEMON_PORT:-####}
 ```
 
 ### Step 2: Establish Frontend Connection
