@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>CJK IME Decoupled Chunk Input Demo</title>
+    <style>
+        /* Retro Cyberpunk Dark Theme */
+        body {
+            background-color: #050505;
+            color: #39ff14;
+            font-family: 'Consolas', 'Courier New', monospace;
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid rgba(57, 255, 20, 0.3);
+            border-radius: 4px;
+            padding: 15px;
+            background: rgba(10, 10, 10, 0.95);
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.05);
+        }
+
+        h2 {
+            font-size: 14px;
+            text-align: center;
+            margin-top: 0;
+            border-bottom: 1px solid rgba(57, 255, 20, 0.2);
+            padding-bottom: 8px;
+            letter-spacing: 1px;
+            text-shadow: 0 0 5px rgba(57, 255, 20, 0.4);
+        }
+
+        /* Simulated Terminal Output */
+        .terminal-viewport {
+            height: 200px;
+            background-color: #000;
+            border: 1px solid rgba(57, 255, 20, 0.15);
+            border-radius: 2px;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            color: #39ff14;
+        }
+
+        .terminal-line {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .system-msg {
+            color: #8be9fd;
+        }
+
+        .stdin-echo {
+            color: #ff79c6;
+        }
+
+        /* Decoupled IME Chunk Input Box */
+        .controller-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* 1st Row: Helper Keys */
+        .helper-keys {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn {
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid rgba(57, 255, 20, 0.3);
+            color: #39ff14;
+            font-family: inherit;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.15s;
+            flex: 1;
+        }
+
+        .btn:hover {
+            background: rgba(57, 255, 20, 0.15);
+            box-shadow: 0 0 6px rgba(57, 255, 20, 0.2);
+        }
+
+        .btn.danger {
+            color: #ff5555;
+            border-color: rgba(255, 85, 85, 0.3);
+        }
+
+        .btn.danger:hover {
+            background: rgba(255, 85, 85, 0.15);
+            box-shadow: 0 0 6px rgba(255, 85, 85, 0.2);
+        }
+
+        .btn.primary {
+            background: transparent;
+            border-color: rgba(57, 255, 20, 0.6);
+            flex: none;
+            width: 70px;
+        }
+
+        .btn.primary:hover {
+            background: #39ff14;
+            color: #000;
+            box-shadow: 0 0 8px rgba(57, 255, 20, 0.3);
+        }
+
+        /* 2nd Row: Text Buffer Sandbox */
+        .input-row {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .sandbox-input {
+            flex: 1;
+            background: #000;
+            border: 1px solid rgba(57, 255, 20, 0.4);
+            color: #39ff14;
+            font-family: inherit;
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 2px;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+
+        .sandbox-input:focus {
+            outline: none;
+            border-color: #39ff14;
+            box-shadow: 0 0 8px rgba(57, 255, 20, 0.3);
+        }
+
+        .options-row {
+            display: flex;
+            justify-content: flex-end;
+            font-size: 9px;
+            color: rgba(57, 255, 20, 0.6);
+        }
+
+        .options-row label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            user-select: none;
+        }
+
+        .options-row input[type="checkbox"] {
+            accent-color: #39ff14;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>[DEMO] VANILLA JS CJK IME CHUNK INPUT PATTERN</h2>
+    
+    <!-- 1. Simulated Virtual Terminal Viewport -->
+    <div class="terminal-viewport" id="terminalViewport">
+        <p class="terminal-line system-msg">[*] CJK IME Composition Sandbox Daemon loaded.</p>
+        <p class="terminal-line system-msg">[*] Read-only viewport simulated. Direct terminal keydown is blocked.</p>
+        <p class="terminal-line">Guest@Sovereign-OS:~$ </p>
+    </div>
+
+    <!-- 2. Decoupled Buffer Control Panel -->
+    <div class="controller-panel">
+        <!-- 1st Row: Virtual Control Key Injector -->
+        <div class="helper-keys">
+            <button class="btn" onclick="injectControl('\\t')">TAB</button>
+            <button class="btn" onclick="injectControl('\\x1b')">ESC</button>
+            <button class="btn danger" onclick="injectControl('\\x03')">CTRL+C</button>
+            <button class="btn danger" onclick="injectControl('\\x04')">CTRL+D</button>
+        </div>
+
+        <!-- 2nd Row: CJK Safe Input Sandbox -->
+        <div class="input-row">
+            <input 
+                type="text" 
+                id="sandboxInput" 
+                class="sandbox-input" 
+                placeholder="여기에 한글이나 일본어를 편하게 타이핑하세요..."
+                autocomplete="off"
+            >
+            <button class="btn primary" id="sendBtn">SEND</button>
+        </div>
+
+        <!-- Options: Auto Enter Toggle -->
+        <div class="options-row">
+            <label>
+                <input type="checkbox" id="autoEnter" checked>
+                <span>AUTO ENTER (APPEND \\r)</span>
+            </label>
+        </div>
+    </div>
+</div>
+
+<script>
+    // -------------------------------------------------------------
+    // Core Engine Logic (Vanilla JS Implementation)
+    // -------------------------------------------------------------
+    const terminalViewport = document.getElementById('terminalViewport');
+    const sandboxInput = document.getElementById('sandboxInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const autoEnterCheckbox = document.getElementById('autoEnter');
+
+    // Simulated PTY Stdin receiver
+    function sendStdin(data) {
+        let displayData = data;
+        
+        // Escape control sequences for readable visualization in the demo
+        if (data === '\r') displayData = '[ENTER(\\r)]';
+        else if (data === '\t') displayData = '[TAB(\\t)]';
+        else if (data === '\x1b') displayData = '[ESC(\\x1b)]';
+        else if (data === '\x03') displayData = '[SIGINT(CTRL+C)]';
+        else if (data === '\x04') displayData = '[EOF(CTRL+D)]';
+        
+        if (data.endsWith('\r') && data.length > 1) {
+            displayData = displayData.slice(0, -1) + ' + [ENTER(\\r)]';
+        }
+
+        writeToTerminalEcho(displayData);
+    }
+
+    // Append output logs to the virtual terminal screen
+    function writeToTerminalEcho(text) {
+        const p = document.createElement('p');
+        p.className = 'terminal-line';
+        
+        if (text.startsWith('[*]')) {
+            p.className += ' system-msg';
+        } else {
+            p.className += ' stdin-echo';
+            p.textContent = '  [Stdin Sent Chunk] ──> ' + text;
+        }
+        
+        terminalViewport.appendChild(p);
+        terminalViewport.scrollTop = terminalViewport.scrollHeight;
+    }
+
+    // Gather completed input chunk and push to PTY
+    function dispatchChunk() {
+        const val = sandboxInput.value;
+        if (!val) return;
+
+        const autoEnter = autoEnterCheckbox.checked;
+        const payload = val + (autoEnter ? '\r' : '');
+
+        // Emit standard single-stream chunk directly to socket/terminal
+        sendStdin(payload);
+
+        // Standard sandbox purge
+        sandboxInput.value = '';
+        sandboxInput.focus();
+    }
+
+    // Direct helper button click injector
+    window.injectControl = function(sequence) {
+        let code = sequence;
+        if (sequence === '\\t') code = '\t';
+        else if (sequence === '\\x1b') code = '\x1b';
+        else if (sequence === '\\x03') code = '\x03';
+        else if (sequence === '\\x04') code = '\x04';
+        
+        sendStdin(code);
+    };
+
+    // Event Bindings
+    sendBtn.addEventListener('click', dispatchChunk);
+    
+    // Core keyboard interceptor inside the sandbox input
+    sandboxInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            dispatchChunk();
+        }
+    });
+
+    // Auto-focus input on startup
+    window.addEventListener('DOMContentLoaded', () => {
+        sandboxInput.focus();
+    });
+</script>
+
+</body>
+</html>
